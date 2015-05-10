@@ -1,14 +1,16 @@
 package com.studyun.bluetooth4chat;
 
-import android.bluetooth.BluetoothDevice;
-
-
 public class Message {
 
+    enum State{
+        FAILED,
+        SENDING,
+        SUCCESS,
+    }
     private final static int ADD = 0;
     private final static int RECEIVED = 1;
     public final static int SEND = 2;
-
+    private State state = State.SENDING;
     private String deviceName;
     private String date;
     private String content;
@@ -65,5 +67,13 @@ public class Message {
             return R.layout.list_say_he_item;
         }
         return 0;
+    }
+
+    public State getState() {
+        return state;
+    }
+
+    public void setState(State state) {
+        this.state = state;
     }
 }

@@ -329,7 +329,7 @@ public class BleClientService extends Service {
 					mCurrentRequest.address, mCurrentRequest.descriptor);
 			break;
 		case WRITE_DESCRIPTOR:
-				ret = clientBle.writeDescriptor(
+			ret = clientBle.writeDescriptor(
 					mCurrentRequest.address, mCurrentRequest.descriptor);
 			break;
 		case READ_RSSI:
@@ -493,13 +493,13 @@ public class BleClientService extends Service {
 	}
 
 	protected void bleReadRemoteRssi(int rssi) {
-		Intent intent = new Intent(ServiceBroadcast.ACTION_GATT_RSSI);
+		Intent intent = new Intent(ServiceBroadcast.BLE_READ_RSSI);
 		intent.putExtra(ServiceBroadcast.EXTRA_RSSI, String.valueOf(rssi));
 		sendBroadcast(intent);
 	}
 
     protected void bleReliableWriteCompleted(String address){
-        Intent intent = new Intent(ServiceBroadcast.ACTION_GATT_RSSI);
+        Intent intent = new Intent(ServiceBroadcast.BLE_RELIABLE_WRITE);
         intent.putExtra(ServiceBroadcast.EXTRA_ADDR, address);
         sendBroadcast(intent);
     }
@@ -512,17 +512,12 @@ public class BleClientService extends Service {
 		this.mNotificationAddress = mNotificationAddress;
 	}
 
-	public void disconnect(String address){
+	void disconnect(String address){
 		clientBle.disconnect(address);
 	}
 
 	@Override
 	public boolean onUnbind(Intent intent) {
-		// After using a given device, you should make sure that
-		// BluetoothGatt.close() is called
-		// such that resources are cleaned up properly. In this particular
-		// example, close() is
-		// invoked when the UI is disconnected from the Service.
 		clientBle.close();
 		return super.onUnbind(intent);
 	}

@@ -17,59 +17,63 @@ public class ServiceBroadcast {
     public static final String BLE_NO_BT_ADAPTER = "com.studyun.bluetooth.no_bt_adapter";
     public static final String BLE_STATUS_ABNORMAL = "com.studyun.bluetooth.status_abnormal";
     /**
-     * @see BleService#bleRequestFailed
+     * @see BleClientService#bleRequestFailed
      */
     public static final String BLE_REQUEST_FAILED = "com.studyun.bluetooth.request_failed";
     /**
-     * @see BleService#bleDeviceFound
+     * @see BleClientService#bleDeviceFound
      */
     public static final String BLE_DEVICE_FOUND = "com.studyun.bluetooth.device_found";
     /**
-     * @see BleService#bleGattConnected
+     * @see BleClientService#bleGattConnected
      */
     public static final String BLE_GATT_CONNECTED = "com.studyun.bluetooth.gatt_connected";
     /**
-     * @see BleService#bleGattDisConnected
+     * @see BleClientService#bleGattDisConnected
      */
     public static final String BLE_GATT_DISCONNECTED = "com.studyun.bluetooth.gatt_disconnected";
     /**
-     * @see BleService#bleServiceDiscovered
+     * @see BleClientService#bleServiceDiscovered
      */
     public static final String BLE_SERVICE_DISCOVERED = "com.studyun.bluetooth.service_discovered";
     /**
-     * @see BleService#bleCharacteristicRead
+     * @see BleClientService#bleCharacteristicRead
      */
     public static final String BLE_CHARACTERISTIC_READ = "com.studyun.bluetooth.characteristic_read";
     /**
-     * @see BleService#bleCharacteristicNotification
+     * @see BleClientService#bleCharacteristicNotification
      */
     public static final String BLE_CHARACTERISTIC_NOTIFICATION = "com.studyun.bluetooth.characteristic_notification";
     /**
-     * @see BleService#bleCharacteristicIndication
+     * @see BleClientService#bleCharacteristicIndication
      */
     public static final String BLE_CHARACTERISTIC_INDICATION = "com.studyun.bluetooth.characteristic_indication";
     /**
-     * @see BleService#bleCharacteristicWrite
+     * @see BleClientService#bleCharacteristicWrite
      */
     public static final String BLE_CHARACTERISTIC_WRITE = "com.studyun.bluetooth.characteristic_write";
     /**
-     * @see BleService#bleDescriptorRead(String, UUID)
+     * @see BleClientService#bleDescriptorRead(String, UUID)
      */
     public static final String BLE_DESCRIPTOR_READ = "com.studyun.bluetooth.descriptor_read";
     /**
-     * @see BleService#bleDescriptorRead(String, UUID)
+     * @see BleClientService#bleDescriptorRead(String, UUID)
      */
     public static final String BLE_DESCRIPTOR_WRITE = "com.studyun.bluetooth.descriptor_write";
     /**
-     * @see BleService#bleCharacteristicChanged
+     * @see BleClientService#bleCharacteristicChanged
      */
     public static final String BLE_CHARACTERISTIC_CHANGED = "com.studyun.bluetooth.characteristic_changed";
 
     /**
-     * @see BleService#
+     * @see BleClientService#bleReadRemoteRssi(int)
      */
-    public final static String ACTION_GATT_RSSI = "ACTION_GATT_RSSI";
+    public final static String BLE_READ_RSSI = "com.studyun.bluetooth.read_rssi";
 
+    /**
+     * @see BleClientService#bleReliableWriteCompleted(String)
+     */
+    public final static String BLE_RELIABLE_WRITE = "com.studyun.bluetooth.reliable_write";
     /**
      * @see BleServerService#descriptorRead
      */
