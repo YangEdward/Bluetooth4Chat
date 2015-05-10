@@ -3,6 +3,9 @@ package com.studyun.bluetooth4chat;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGattCharacteristic;
+import android.bluetooth.BluetoothGattDescriptor;
+import android.bluetooth.BluetoothGattService;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -10,6 +13,7 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -17,6 +21,7 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.Toast;
 
 import com.studyun.bluetooth.BleClientService;
 import com.studyun.bluetooth.BleServerService;
@@ -34,12 +39,17 @@ import java.util.UUID;
  */
 public class BLEChatActivity extends Activity implements View.OnClickListener{
 
+    private static final String TAG = BLEChatActivity.class.getSimpleName();
     private List<Message> messageList;
     private EditText messageText;
     private MessageAdapter messageAdapter;
     private ClientBle mBle;
     private BleClientService service;
     private BleServerService serverService;
+    private List<BluetoothGattCharacteristic> writes = new ArrayList<>();
+    private List<BluetoothGattCharacteristic> reads = new ArrayList<>();
+    private boolean isConnect;
+    private String connectDeviceAddress;
     public static boolean isServer;
 
     @Override
@@ -118,7 +128,7 @@ public class BLEChatActivity extends Activity implements View.OnClickListener{
         if(content.isEmpty()){
            return;
         }
-
+        writeData(content.getBytes());
         Message message = new Message(mBle.getMyDeviceName(),DateUtils.now(),
                 content,Message.SEND);
 
@@ -126,6 +136,15 @@ public class BLEChatActivity extends Activity implements View.OnClickListener{
         messageAdapter.notifyDataSetChanged();
     }
 
+    private void writeData(byte[] data){
+
+        if(isConnect && writes.size() == 0){
+            for(BluetoothGattCharacteristic characteristic : writes){
+                characteristic.setValue(data);
+                mBle.writeCharacteristic(connectDeviceAddress,characteristic);
+            }
+        }
+    }
     /**
      * 蓝牙服务监听，Client模式监听
      */
@@ -135,32 +154,89 @@ public class BLEChatActivity extends Activity implements View.OnClickListener{
         public void onReceive(Context context, Intent intent) {
             Bundle extras = intent.getExtras();
             String action = intent.getAction();
-
-            if(action.equals(ServiceBroadcast.BLE_DEVICE_FOUND)){
-                mBle.stopScan();
-                BluetoothDevice device = extras.getParcelable(ServiceBroadcast.EXTRA_DEVICE);
-                mBle.requestConnect(device.getAddress());
-            }else if(action.equals(ServiceBroadcast.BLE_GATT_CONNECTED)){
-
-            }else if(action.equals(ServiceBroadcast.BLE_GATT_DISCONNECTED)){
-
-            }else if(action.equals(ServiceBroadcast.BLE_CHARACTERISTIC_READ)){
-
-            }else if(action.equals(ServiceBroadcast.BLE_CHARACTERISTIC_CHANGED)){
-
-            }else if(action.equals(ServiceBroadcast.BLE_CHARACTERISTIC_NOTIFICATION)){
-
-            }else if(action.equals(ServiceBroadcast.BLE_CHARACTERISTIC_INDICATION)){
-
-            }else if(action.equals(ServiceBroadcast.BLE_CHARACTERISTIC_WRITE)){
-
-            }else if(action.equals(ServiceBroadcast.BLE_SERVICE_DISCOVERED)){
-
+            BluetoothDevice device;
+            String address;
+            UUID uuid;
+            byte [] values;
+            switch (action) {
+                case ServiceBroadcast.BLE_DEVICE_FOUND:
+                    mBle.stopScan();
+                    device = extras.getParcelable(ServiceBroadcast.EXTRA_DEVICE);
+                    mBle.requestConnect(device.getAddress());
+                    break;
+                case ServiceBroadcast.BLE_GATT_CONNECTED:
+                    device = extras.getParcelable(ServiceBroadcast.EXTRA_DEVICE);
+                    connectDeviceAddress = device.getAddress();
+                    Log.e(TAG,"device name = " + device.getName());
+                    isConnect = true;
+                    updateConnectState(R.string.connected);
+                    break;
+                case ServiceBroadcast.BLE_GATT_DISCONNECTED:
+                    address = extras.getString(ServiceBroadcast.EXTRA_ADDR);
+                    isConnect = false;
+                    updateConnectState(R.string.disconnected);
+                    break;
+                case ServiceBroadcast.BLE_SERVICE_DISCOVERED:
+                    address = extras.getString(ServiceBroadcast.EXTRA_ADDR);
+                    showServices(mBle.getServices(address));
+                    break;
+                /*read characteristic values,invoked by client*/
+                case ServiceBroadcast.BLE_CHARACTERISTIC_READ:
+                    address = extras.getString(ServiceBroadcast.EXTRA_ADDR);
+                    uuid = extras.getParcelable(ServiceBroadcast.EXTRA_UUID);
+                    values = extras.getByteArray(ServiceBroadcast.EXTRA_VALUE);
+                    break;
+                /*when characteristic changed,remote device invoked*/
+                case ServiceBroadcast.BLE_CHARACTERISTIC_CHANGED:
+                    address = extras.getString(ServiceBroadcast.EXTRA_ADDR);
+                    uuid = extras.getParcelable(ServiceBroadcast.EXTRA_UUID);
+                    values = extras.getByteArray(ServiceBroadcast.EXTRA_VALUE);
+                    //updateValues(values);
+                    break;
+                case ServiceBroadcast.BLE_CHARACTERISTIC_NOTIFICATION:
+                    break;
+                case ServiceBroadcast.BLE_CHARACTERISTIC_INDICATION:
+                    break;
+                case ServiceBroadcast.BLE_CHARACTERISTIC_WRITE:
+                    address = extras.getString(ServiceBroadcast.EXTRA_ADDR);
+                    uuid = extras.getParcelable(ServiceBroadcast.EXTRA_UUID);
+                    Log.e(TAG,"Write Success");
+                    //Write Success
+                    break;
+                case ServiceBroadcast.BLE_DESCRIPTOR_READ:
+                    break;
+                case ServiceBroadcast.BLE_DESCRIPTOR_WRITE:
+                    break;
             }
         }
 
     };
 
+    private void showServices(List<BluetoothGattService> services){
+        for(BluetoothGattService service : services){
+            Log.e(TAG,"service Type = " + service.getType());
+            Log.e(TAG,"service UUID = " + service.getUuid().toString());
+            for(BluetoothGattCharacteristic characteristic : service.getCharacteristics()){
+                if((characteristic.getProperties() & BluetoothGattCharacteristic.PROPERTY_WRITE) != 0){
+                    writes.add(characteristic);
+                }
+                if((characteristic.getProperties() & BluetoothGattCharacteristic.PROPERTY_READ) != 0){
+                    reads.add(characteristic);
+                    mBle.requestCharacteristicNotification(connectDeviceAddress,characteristic);
+                }
+                Log.e(TAG,"characteristic Permissions = " + characteristic.getPermissions());
+                Log.e(TAG,"characteristic Properties = " + characteristic.getProperties());
+                Log.e(TAG,"characteristic WriteType = " + characteristic.getWriteType());
+                Log.e(TAG,"characteristic Value = " + String.valueOf(characteristic.getValue()));
+                Log.e(TAG,"characteristic UUID = " + characteristic.getUuid().toString());
+                for(BluetoothGattDescriptor descriptor : characteristic.getDescriptors()){
+                    Log.e(TAG,"descriptor Permissions = " + descriptor.getPermissions());
+//                    Log.e(TAG,"descriptor Value = " + descriptor.getValue().toString());
+                    Log.e(TAG,"descriptor UUID = " + descriptor.getUuid().toString());
+                }
+            }
+        }
+    }
     /**
      * 蓝牙服务监听，Server模式监听
      */
@@ -182,11 +258,11 @@ public class BLEChatActivity extends Activity implements View.OnClickListener{
                     break;
                 case ServiceBroadcast.BLE_GATT_CONNECTED:
                     address  = extras.getString(ServiceBroadcast.EXTRA_ADDR);
-                    updateConnectState(address);
+                    updateConnectState(R.string.connected);
                     break;
                 case ServiceBroadcast.BLE_GATT_DISCONNECTED:
                     address  = extras.getString(ServiceBroadcast.EXTRA_ADDR);
-                    updateConnectState(address);
+                    updateConnectState(R.string.disconnected);
                     break;
                 case ServiceBroadcast.BLE_SERVICE_DISCOVERED:
                     address  = extras.getString(ServiceBroadcast.EXTRA_ADDR);
@@ -220,14 +296,13 @@ public class BLEChatActivity extends Activity implements View.OnClickListener{
                     break;
             }
         }
-
     };
 
     /**
      * 更新连接状态
      */
-    private void updateConnectState(String state){
-
+    private void updateConnectState(int state){
+        Toast.makeText(this,state,Toast.LENGTH_LONG).show();
     }
 
     private final static int REQUEST_ENABLE_BT = 1;
@@ -248,6 +323,10 @@ public class BLEChatActivity extends Activity implements View.OnClickListener{
                 Intent enableIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
                 startActivityForResult(enableIntent,REQUEST_ENABLE_BT);
             }
+            if(mBle != null){
+                mBle.startScan(true);
+            }
+            Log.e(TAG,"onServiceConnected");
         }
 
         @Override

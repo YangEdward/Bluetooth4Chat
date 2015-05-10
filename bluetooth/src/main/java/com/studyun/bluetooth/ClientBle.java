@@ -160,14 +160,18 @@ public class ClientBle{
 	 * @param cancelAuto 蓝牙扫描是比较耗电的，通常请设置扫描后自动关闭,默认扫描时间为10秒
 	 */
 	public void startScan(boolean cancelAuto) {
+		if(mBtAdapter == null){
+			return;
+		}
 		mBtAdapter.startLeScan(mLeScanCallback);
 		if(cancelAuto){
+			handler = new Handler();
 			handler.postDelayed(new Runnable() {
 				@Override
 				public void run() {
 					stopScan();
 				}
-			},DEFAULT_SCAN_TIME);
+			}, DEFAULT_SCAN_TIME);
 		}
 	}
 

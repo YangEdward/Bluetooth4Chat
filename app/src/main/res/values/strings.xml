@@ -13,4 +13,7 @@
     <string name="menu_stop">Stop</string>
     <string name="unknown_device">Unknown device</string>
 
+    <string name="connected">Bluetooth connected</string>
+    <string name="disconnected">Bluetooth disconnected</string>
+
 </resources>

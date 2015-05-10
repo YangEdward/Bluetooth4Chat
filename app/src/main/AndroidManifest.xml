@@ -31,7 +31,7 @@
         </activity>
 
         <service
-            android:name="com.studyun.bluetooth.BleService"
+            android:name="com.studyun.bluetooth.BleClientService"
             android:enabled="true" />
 
         <service
