@@ -47,9 +47,11 @@
 package com.studyun.bluetooth;
 
 import android.bluetooth.BluetoothGattCharacteristic;
+import android.bluetooth.BluetoothGattDescriptor;
 
 class BleRequest {
 
+	//11 requests
 	public enum RequestType {
 		CONNECT_GATT,
 		DISCOVER_SERVICE,
@@ -74,6 +76,7 @@ class BleRequest {
 	public String address;
 	public BluetoothGattCharacteristic characteristic;
 	public String remark;
+	BluetoothGattDescriptor descriptor;
 
 	public BleRequest(RequestType type, String address) {
 		this.type = type;
@@ -85,6 +88,13 @@ class BleRequest {
 		this.type = type;
 		this.address = address;
 		this.characteristic = characteristic;
+	}
+
+	public BleRequest(RequestType type, String address,
+					  BluetoothGattDescriptor descriptor) {
+		this.type = type;
+		this.address = address;
+		this.descriptor = descriptor;
 	}
 
 	public BleRequest(RequestType type, String address,

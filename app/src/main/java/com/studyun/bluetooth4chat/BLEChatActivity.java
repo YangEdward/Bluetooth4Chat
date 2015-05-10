@@ -137,11 +137,12 @@ public class BLEChatActivity extends Activity implements View.OnClickListener{
     }
 
     private void writeData(byte[] data){
-
-        if(isConnect && writes.size() == 0){
+        data = new byte[]{(byte) 0xAE,(byte) 0xAA,(byte)0x01,(byte)0x50,(byte)0x58,(byte)0x56};
+        if(isConnect && writes.size() != 0){
             for(BluetoothGattCharacteristic characteristic : writes){
-                characteristic.setValue(data);
-                mBle.writeCharacteristic(connectDeviceAddress,characteristic);
+            //BluetoothGattCharacteristic characteristic = writes.get(1);
+                    characteristic.setValue(data);
+                mBle.requestWriteCharacteristic(connectDeviceAddress,characteristic,"");
             }
         }
     }
@@ -183,13 +184,13 @@ public class BLEChatActivity extends Activity implements View.OnClickListener{
                 /*read characteristic values,invoked by client*/
                 case ServiceBroadcast.BLE_CHARACTERISTIC_READ:
                     address = extras.getString(ServiceBroadcast.EXTRA_ADDR);
-                    uuid = extras.getParcelable(ServiceBroadcast.EXTRA_UUID);
+                    uuid = (UUID)extras.getSerializable(ServiceBroadcast.EXTRA_UUID);
                     values = extras.getByteArray(ServiceBroadcast.EXTRA_VALUE);
                     break;
                 /*when characteristic changed,remote device invoked*/
                 case ServiceBroadcast.BLE_CHARACTERISTIC_CHANGED:
                     address = extras.getString(ServiceBroadcast.EXTRA_ADDR);
-                    uuid = extras.getParcelable(ServiceBroadcast.EXTRA_UUID);
+                    uuid = (UUID)extras.getSerializable(ServiceBroadcast.EXTRA_UUID);
                     values = extras.getByteArray(ServiceBroadcast.EXTRA_VALUE);
                     //updateValues(values);
                     break;
@@ -199,7 +200,7 @@ public class BLEChatActivity extends Activity implements View.OnClickListener{
                     break;
                 case ServiceBroadcast.BLE_CHARACTERISTIC_WRITE:
                     address = extras.getString(ServiceBroadcast.EXTRA_ADDR);
-                    uuid = extras.getParcelable(ServiceBroadcast.EXTRA_UUID);
+                    uuid = (UUID)extras.getSerializable(ServiceBroadcast.EXTRA_UUID);
                     Log.e(TAG,"Write Success");
                     //Write Success
                     break;
@@ -271,13 +272,13 @@ public class BLEChatActivity extends Activity implements View.OnClickListener{
                 /*read characteristic values,invoked by client*/
                 case ServiceBroadcast.BLE_CHARACTERISTIC_READ:
                     address  = extras.getString(ServiceBroadcast.EXTRA_ADDR);
-                    uuid = extras.getParcelable(ServiceBroadcast.EXTRA_UUID);
+                    uuid = (UUID)extras.getSerializable(ServiceBroadcast.EXTRA_UUID);
                     values = extras.getByteArray(ServiceBroadcast.EXTRA_VALUE);
                     break;
                 /*when characteristic changed,remote device invoked*/
                 case ServiceBroadcast.BLE_CHARACTERISTIC_CHANGED:
                     address  = extras.getString(ServiceBroadcast.EXTRA_ADDR);
-                    uuid = extras.getParcelable(ServiceBroadcast.EXTRA_UUID);
+                    uuid = (UUID)extras.getSerializable(ServiceBroadcast.EXTRA_UUID);
                     values = extras.getByteArray(ServiceBroadcast.EXTRA_VALUE);
                     //updateValues(values);
                     break;
@@ -287,7 +288,7 @@ public class BLEChatActivity extends Activity implements View.OnClickListener{
                     break;
                 case ServiceBroadcast.BLE_CHARACTERISTIC_WRITE:
                     address  = extras.getString(ServiceBroadcast.EXTRA_ADDR);
-                    uuid = extras.getParcelable(ServiceBroadcast.EXTRA_UUID);
+                    uuid = (UUID)extras.getSerializable(ServiceBroadcast.EXTRA_UUID);
                     //Write Success
                     break;
                 case ServiceBroadcast.BLE_DESCRIPTOR_READ:

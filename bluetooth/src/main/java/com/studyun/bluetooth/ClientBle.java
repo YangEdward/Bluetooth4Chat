@@ -83,8 +83,6 @@ public class ClientBle{
 	/* use service to send broadcast*/
 	private BleClientService mService;
 
-	private Handler handler;
-
 	private final static int DEFAULT_SCAN_TIME = 1000;
 	/*bluetooth adapter*/
 
@@ -156,7 +154,6 @@ public class ClientBle{
 	}
 
 	/**
-	 *
 	 * @param cancelAuto 蓝牙扫描是比较耗电的，通常请设置扫描后自动关闭,默认扫描时间为10秒
 	 */
 	public void startScan(boolean cancelAuto) {
@@ -165,7 +162,7 @@ public class ClientBle{
 		}
 		mBtAdapter.startLeScan(mLeScanCallback);
 		if(cancelAuto){
-			handler = new Handler();
+			Handler handler = new Handler();
 			handler.postDelayed(new Runnable() {
 				@Override
 				public void run() {
@@ -175,20 +172,41 @@ public class ClientBle{
 		}
 	}
 
+	/**
+	 * stop bluetooth scan
+	 */
 	public void stopScan() {
 		mBtAdapter.stopLeScan(mLeScanCallback);
 	}
 
+	/**
+	 * @return true if bluetooth enable
+	 */
 	public boolean adapterEnabled() {
 		return mBtAdapter != null && mBtAdapter.isEnabled();
 	}
 
 	/**
+	 * \request to connect remote device,this request will be put in the request queue
+	 * @param address remote device
+	 * @return true if request success
+	 */
+	public boolean requestConnect(String address) {
+		BluetoothGatt gatt = mBluetoothGatts.get(address);
+		if (gatt != null && gatt.getServices().size() == 0) {
+			return false;
+		}
+
+		mService.addBleRequest(new BleRequest(BleRequest.RequestType.CONNECT_GATT, address));
+		return true;
+	}
+
+	/**
 	 * connect device
 	 * @param address device address
-	 * @return true is success
+	 * @return true if success
 	 */
-	public boolean connect(String address) {
+	boolean connect(String address) {
 		BluetoothDevice device = mBtAdapter.getRemoteDevice(address);
 		BluetoothGatt gatt = device.connectGatt(mService, false, mGattCallback);
 		if (gatt == null) {
@@ -230,38 +248,12 @@ public class ClientBle{
 		return list;
 	}
 
-	public boolean requestReadCharacteristic(String address,
-											 BluetoothGattCharacteristic characteristic) {
-		BluetoothGatt gatt = mBluetoothGatts.get(address);
-		if (gatt == null || characteristic == null) {
-			return false;
-		}
-
-		mService.addBleRequest(new BleRequest(BleRequest.RequestType.READ_CHARACTERISTIC,
-				gatt.getDevice().getAddress(), characteristic));
-		return true;
-	}
-
-	public boolean readCharacteristic(String address,
-			BluetoothGattCharacteristic characteristic) {
-		BluetoothGatt gatt = mBluetoothGatts.get(address);
-
-		return gatt != null && gatt.readCharacteristic(characteristic);
-	}
-
-	public boolean discoverServices(String address) {
-		BluetoothGatt gatt = mBluetoothGatts.get(address);
-		if (gatt == null) {
-			return false;
-		}
-
-		boolean ret = gatt.discoverServices();
-		if (!ret) {
-			disconnect(address);
-		}
-		return ret;
-	}
-
+	/**
+	 * when this device is BLE client,it can use this method to get BLE service from remote device
+	 * @param address device address
+	 * @param uuid service uuid
+	 * @return many BLE services
+	 */
 	public BluetoothGattService getService(String address, UUID uuid) {
 		BluetoothGatt gatt = mBluetoothGatts.get(address);
 		if (gatt == null) {
@@ -276,6 +268,172 @@ public class ClientBle{
 		}
 	}
 
+	/**
+	 * request to read characteristic,this request will be put in the request queue
+	 * @param address remote device address
+	 * @param characteristic  which is to be wrote
+	 * @return true if request success
+	 */
+	public boolean requestReadCharacteristic(String address,
+											 BluetoothGattCharacteristic characteristic) {
+		BluetoothGatt gatt = mBluetoothGatts.get(address);
+		if (gatt == null || characteristic == null) {
+			return false;
+		}
+
+		mService.addBleRequest(new BleRequest(BleRequest.RequestType.READ_CHARACTERISTIC,
+				gatt.getDevice().getAddress(), characteristic));
+		return true;
+	}
+
+	/**
+	 * read characteristic
+	 * @param address remote device address
+	 * @param characteristic  which is to be wrote
+	 * @return true if read success
+	 */
+	boolean readCharacteristic(String address,
+			BluetoothGattCharacteristic characteristic) {
+		BluetoothGatt gatt = mBluetoothGatts.get(address);
+
+		return gatt != null && gatt.readCharacteristic(characteristic);
+	}
+
+	/**
+	 * request to discover services,this request will be put in the request queue
+	 * @param address remote device address
+	 * @return true if request success
+	 */
+	public boolean requestDiscoverServices (String address){
+		BluetoothGatt gatt = mBluetoothGatts.get(address);
+		if (gatt == null) {
+			return false;
+		}
+		mService.addBleRequest(new BleRequest(
+				BleRequest.RequestType.DISCOVER_SERVICE, address));
+		return true;
+	}
+
+	/**
+	 * discover services
+	 * @param address remote device address
+	 * @return true if discover success
+	 */
+	boolean discoverServices(String address) {
+		BluetoothGatt gatt = mBluetoothGatts.get(address);
+		if (gatt == null) {
+			return false;
+		}
+
+		boolean ret = gatt.discoverServices();
+		if (!ret) {
+			disconnect(address);
+		}
+		return ret;
+	}
+
+	/**
+	 * invoke write characteristic for remote device,this request will be put in the queue
+	 * @param address  remote device address
+	 * @param characteristic
+	 *            Get characteristic from {@link BluetoothGattService}
+	 * @param remark
+	 *            For debug purpose.
+	 * @return true if request success
+	 */
+	public boolean requestWriteCharacteristic(String address,
+											  BluetoothGattCharacteristic characteristic, String remark) {
+		BluetoothGatt gatt = mBluetoothGatts.get(address);
+		if (gatt == null || characteristic == null) {
+			return false;
+		}
+
+		mService.addBleRequest(new BleRequest(BleRequest.RequestType.WRITE_CHARACTERISTIC,
+				gatt.getDevice().getAddress(), characteristic, remark));
+		return true;
+	}
+
+	/**
+	 * write characteristic for remote device
+	 * @param address remote device address
+	 * @param characteristic characteristic which is to be wrote
+	 * @return true if write success
+	 */
+	boolean writeCharacteristic(String address,
+								BluetoothGattCharacteristic characteristic) {
+		BluetoothGatt gatt = mBluetoothGatts.get(address);
+		return gatt != null && gatt
+				.writeCharacteristic(characteristic);
+	}
+
+	/**
+	 * invoke read descriptor for remote device,this request will be put in the queue
+	 * @param address  remote device address
+	 * @param descriptor Get descriptor from {@link BluetoothGattService}
+	 * @return true if request success
+	 */
+	public boolean requestReadDescriptor(String address,
+											  BluetoothGattDescriptor descriptor) {
+		BluetoothGatt gatt = mBluetoothGatts.get(address);
+		if (gatt == null || descriptor == null) {
+			return false;
+		}
+
+		mService.addBleRequest(new BleRequest(BleRequest.RequestType.READ_DESCRIPTOR,
+				gatt.getDevice().getAddress(), descriptor));
+		return true;
+	}
+
+	/**
+	 * read descriptor for remote device
+	 * @param address remote device address
+	 * @param descriptor descriptor which is to be read
+	 * @return true if read success
+	 */
+	boolean readDescriptor(String address,
+								BluetoothGattDescriptor descriptor) {
+		BluetoothGatt gatt = mBluetoothGatts.get(address);
+		return gatt != null && gatt
+				.readDescriptor(descriptor);
+	}
+
+	/**
+	 * invoke write descriptor for remote device,this request will be put in the queue
+	 * @param address  remote device address
+	 * @param descriptor Get descriptor from {@link BluetoothGattService}
+	 * @return true if request success
+	 */
+	public boolean requestWriteDescriptor(String address,
+										 BluetoothGattDescriptor descriptor) {
+		BluetoothGatt gatt = mBluetoothGatts.get(address);
+		if (gatt == null || descriptor == null) {
+			return false;
+		}
+
+		mService.addBleRequest(new BleRequest(BleRequest.RequestType.WRITE_DESCRIPTOR,
+				gatt.getDevice().getAddress(), descriptor));
+		return true;
+	}
+
+	/**
+	 * write descriptor for remote device
+	 * @param address remote device address
+	 * @param descriptor descriptor which is to be wrote
+	 * @return true if write success
+	 */
+	boolean writeDescriptor(String address,
+						   BluetoothGattDescriptor descriptor) {
+		BluetoothGatt gatt = mBluetoothGatts.get(address);
+		return gatt != null && gatt
+				.readDescriptor(descriptor);
+	}
+
+	/**
+	 * request notification characteristic,this request will be put in the queue.
+	 * @param address remote device address
+	 * @param characteristic which to be notified
+	 * @return true if request success
+	 */
 	public boolean requestCharacteristicNotification(String address,
 													 BluetoothGattCharacteristic characteristic) {
 		BluetoothGatt gatt = mBluetoothGatts.get(address);
@@ -285,11 +443,55 @@ public class ClientBle{
 
 		mService.addBleRequest(new BleRequest(
 				BleRequest.RequestType.CHARACTERISTIC_NOTIFICATION, gatt.getDevice()
-						.getAddress(), characteristic));
+				.getAddress(), characteristic));
 		return true;
 	}
 
-	public boolean characteristicNotification(String address,
+	/**
+	 * request indication characteristic,this request will be put in the queue.
+	 * @param address remote device address
+	 * @param characteristic which to be indicated
+	 * @return true if request success
+	 */
+	public boolean requestIndication(String address,
+									 BluetoothGattCharacteristic characteristic) {
+		BluetoothGatt gatt = mBluetoothGatts.get(address);
+		if (gatt == null || characteristic == null) {
+			return false;
+		}
+
+		mService.addBleRequest(new BleRequest(
+				BleRequest.RequestType.CHARACTERISTIC_INDICATION, gatt.getDevice()
+				.getAddress(), characteristic));
+		return true;
+	}
+
+	/**
+	 * request stop notification characteristic,this request will be put in the queue.
+	 * @param address remote device address
+	 * @param characteristic which to be stopped notification
+	 * @return true if request success
+	 */
+	public boolean requestStopNotification(String address,
+										   BluetoothGattCharacteristic characteristic) {
+		BluetoothGatt gatt = mBluetoothGatts.get(address);
+		if (gatt == null || characteristic == null) {
+			return false;
+		}
+
+		mService.addBleRequest(new BleRequest(
+				BleRequest.RequestType.CHARACTERISTIC_STOP_NOTIFICATION, gatt.getDevice()
+				.getAddress(), characteristic));
+		return true;
+	}
+
+	/**
+	 * set notification characteristic.
+	 * @param address remote device address
+	 * @param characteristic which to be sot
+	 * @return true if set success
+	 */
+	boolean characteristicNotification(String address,
 											  BluetoothGattCharacteristic characteristic) {
 		BleRequest request = mService.getCurrentRequest();
 		BluetoothGatt gatt = mBluetoothGatts.get(address);
@@ -321,123 +523,79 @@ public class ClientBle{
 			val_set = BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE;
 		}
 
-		return descriptor.setValue(val_set) && gatt.writeDescriptor(descriptor);
+		return descriptor.setValue(val_set) && requestWriteDescriptor(address,descriptor);
 	}
 
 	/**
-	 * {@inheritDoc}
-	 * @param address
-	 * @param characteristic
-	 *            Get characteristic from {@link BluetoothGattService}
-	 * @param remark
-	 *            For debug purpose.
-	 * @return
+	 * get bluetooth address
+	 * @return address
 	 */
-	public boolean requestWriteCharacteristic(String address,
-											  BluetoothGattCharacteristic characteristic, String remark) {
-		BluetoothGatt gatt = mBluetoothGatts.get(address);
-		if (gatt == null || characteristic == null) {
-			return false;
-		}
-
-		mService.addBleRequest(new BleRequest(BleRequest.RequestType.WRITE_CHARACTERISTIC,
-				gatt.getDevice().getAddress(), characteristic, remark));
-		return true;
-	}
-
-	public boolean writeCharacteristic(String address,
-									   BluetoothGattCharacteristic characteristic) {
-		BluetoothGatt gatt = mBluetoothGatts.get(address);
-		return gatt != null && gatt
-				.writeCharacteristic(characteristic);
-	}
-
-	public boolean requestConnect(String address) {
-		BluetoothGatt gatt = mBluetoothGatts.get(address);
-		if (gatt != null && gatt.getServices().size() == 0) {
-			return false;
-		}
-
-		mService.addBleRequest(new BleRequest(BleRequest.RequestType.CONNECT_GATT, address));
-		return true;
-	}
-
-
 	public String getBTAdapterMacAddr() {
 		if (mBtAdapter != null) {
 			return mBtAdapter.getAddress();
 		}
 		return null;
 	}
-
-
-	public boolean requestIndication(String address,
-									 BluetoothGattCharacteristic characteristic) {
+	/**
+	 * request to execute reliable write for remote device,this request will be put in the queue.
+	 * @param address  remote device address
+	 * @return true if request success
+	 */
+	public boolean requestExecuteReliableWrite(String address) {
 		BluetoothGatt gatt = mBluetoothGatts.get(address);
-		if (gatt == null || characteristic == null) {
+		if (gatt == null) {
+			Log.w(TAG, "BluetoothAdapter not initialized");
 			return false;
 		}
-
 		mService.addBleRequest(new BleRequest(
-				BleRequest.RequestType.CHARACTERISTIC_INDICATION, gatt.getDevice()
-						.getAddress(), characteristic));
+				BleRequest.RequestType.RELIABLE_WRITE_COMPLETED, gatt.getDevice()
+				.getAddress()));
 		return true;
 	}
-
-	public boolean requestStopNotification(String address,
-										   BluetoothGattCharacteristic characteristic) {
-		BluetoothGatt gatt = mBluetoothGatts.get(address);
-		if (gatt == null || characteristic == null) {
-			return false;
-		}
-
-		mService.addBleRequest(new BleRequest(
-				BleRequest.RequestType.CHARACTERISTIC_NOTIFICATION, gatt.getDevice()
-				.getAddress(), characteristic));
-		return true;
-	}
-
 
 	/**
-	 * Enables or disables notification on a give characteristic.
-	 *
-	 * @param characteristic
-	 *            Characteristic to act on.
-	 * @param enabled
-	 *            If true, enable notification. False otherwise.
+	 * Execute reliable write.
+	 * @param address  remote device address
+	 * @return true if execute success
 	 */
-	public void setCharacteristicNotification(String address,
-			BluetoothGattCharacteristic characteristic, boolean enabled) {
+	boolean executeReliableWrite(String address){
 		BluetoothGatt gatt = mBluetoothGatts.get(address);
-		if (mBtAdapter == null || gatt == null) {
-			Log.w(TAG, "BluetoothAdapter not initialized");
-			return;
-		}
-		gatt.setCharacteristicNotification(characteristic, enabled);
-
-		/*if (UUID_BLE_SHIELD_RX.equals(characteristic.getUuid())) {*/
-			BluetoothGattDescriptor descriptor = characteristic
-					.getDescriptor(ServiceBroadcast.DESC_CCC);
-			descriptor
-					.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-			gatt.writeDescriptor(descriptor);
-		/*}*/
+		return gatt != null && gatt.executeReliableWrite();
 	}
 
-	public void readRssi(String address) {
+	/**
+	 * request to read rssi for remote device,this request will be put in the queue.
+	 * @param address  remote device address
+	 * @return true if request success
+	 */
+	public boolean requestReadRssi(String address) {
 		BluetoothGatt gatt = mBluetoothGatts.get(address);
-		if (mBtAdapter == null || gatt == null) {
+		if (gatt == null) {
 			Log.w(TAG, "BluetoothAdapter not initialized");
-			return;
+			return false;
 		}
-		gatt.readRemoteRssi();
+		mService.addBleRequest(new BleRequest(
+				BleRequest.RequestType.READ_RSSI, gatt.getDevice()
+				.getAddress()));
+		return true;
 	}
 
+	/**
+	 * read rssi.
+	 * @param address  remote device address
+	 * @return true if read success
+	 */
+	boolean readRssi(String address){
+		BluetoothGatt gatt = mBluetoothGatts.get(address);
+		return gatt != null && gatt.readRemoteRssi();
+	}
+
+	/**
+	 * close bluetooth client.
+	 */
 	public void close() {
-
 		for (BluetoothGatt gatt : mBluetoothGatts.values()) {
 			gatt.close();
 		}
 	}
-
 }

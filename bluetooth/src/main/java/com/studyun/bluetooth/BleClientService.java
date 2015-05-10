@@ -325,6 +325,18 @@ public class BleClientService extends Service {
 					mCurrentRequest.address, mCurrentRequest.characteristic);
 			break;
 		case READ_DESCRIPTOR:
+			ret = clientBle.readDescriptor(
+					mCurrentRequest.address, mCurrentRequest.descriptor);
+			break;
+		case WRITE_DESCRIPTOR:
+				ret = clientBle.writeDescriptor(
+					mCurrentRequest.address, mCurrentRequest.descriptor);
+			break;
+		case READ_RSSI:
+			ret = clientBle.readRssi(mCurrentRequest.address);
+			break;
+		case RELIABLE_WRITE_COMPLETED:
+			ret = clientBle.executeReliableWrite(mCurrentRequest.address);
 			break;
 		default:
 			break;
@@ -486,10 +498,9 @@ public class BleClientService extends Service {
 		sendBroadcast(intent);
 	}
 
-
-    protected void bleReliableWriteCompleted(BluetoothGatt gatt){
+    protected void bleReliableWriteCompleted(String address){
         Intent intent = new Intent(ServiceBroadcast.ACTION_GATT_RSSI);
-        //intent.putExtra(ServiceBroadcast.EXTRA_RSSI, gatt);
+        intent.putExtra(ServiceBroadcast.EXTRA_ADDR, address);
         sendBroadcast(intent);
     }
 

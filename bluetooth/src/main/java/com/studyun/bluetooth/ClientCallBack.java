@@ -154,9 +154,13 @@ class ClientCallBack extends BluetoothGattCallback {
     @Override
     public void onReliableWriteCompleted(BluetoothGatt gatt, int status) {
         Log.w(TAG, "onReliableWriteCompleted received: " + status);
-        if (status == BluetoothGatt.GATT_SUCCESS) {
-            mService.bleReliableWriteCompleted(gatt);
+        String address = gatt.getDevice().getAddress();
+        if (status != BluetoothGatt.GATT_SUCCESS) {
+            mService.requestProcessed(address,
+                    BleRequest.RequestType.RELIABLE_WRITE_COMPLETED, false);
+            return;
         }
+        mService.bleReliableWriteCompleted(address);
     }
 
     /**
@@ -165,8 +169,11 @@ class ClientCallBack extends BluetoothGattCallback {
     @Override
     public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
         Log.w(TAG, "onReadRemoteRssi received: " + status);
-        if (status == BluetoothGatt.GATT_SUCCESS) {
-            mService.bleReadRemoteRssi(rssi);
+        if (status != BluetoothGatt.GATT_SUCCESS) {
+            mService.requestProcessed(gatt.getDevice().getAddress(),
+                    BleRequest.RequestType.READ_RSSI, false);
+            return;
         }
+        mService.bleReadRemoteRssi(rssi);
     }
 }
