@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_marginEnd="@dimen/message_margin_start">
+
+    <TextView
+        android:id="@+id/receiveBluetoothName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:padding="@dimen/portrait_padding"
+        android:singleLine="false"
+        android:text="@string/app_name"
+        android:layout_alignParentStart="true"
+        android:background="@mipmap/portrait" />
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingEnd="@dimen/normal_margin"
+        android:paddingStart="@dimen/message_padding"
+        android:paddingTop="@dimen/message_padding"
+        android:paddingBottom="@dimen/message_padding"
+        android:layout_toEndOf="@+id/receiveBluetoothName"
+        android:background="@drawable/receive_message">
+
+        <TextView
+            android:id="@+id/receiveMessageTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/black"
+            android:textSize="15sp"/>
+
+        <TextView
+            android:id="@+id/receiveMessageContent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/message_text"
+            android:textSize="18sp" />
+    </LinearLayout>
+
+</RelativeLayout>

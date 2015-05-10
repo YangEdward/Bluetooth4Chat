@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="@dimen/message_margin_start">
+
+  <LinearLayout
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:orientation="vertical"
+      android:paddingEnd="@dimen/normal_margin"
+      android:paddingStart="@dimen/message_padding"
+      android:paddingTop="@dimen/message_padding"
+      android:paddingBottom="@dimen/message_padding"
+      android:layout_toStartOf="@+id/sendBluetoothName"
+      android:background="@drawable/send_message">
+
+      <TextView
+          android:id="@+id/sendMessageTime"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:textColor="@color/black"
+          android:textSize="15sp"/>
+
+      <TextView
+          android:id="@+id/sendMessageContent"
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:textColor="@color/message_text"
+          android:textSize="18sp" />
+  </LinearLayout>
+
+  <TextView
+      android:id="@+id/sendBluetoothName"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:gravity="center"
+      android:padding="@dimen/portrait_padding"
+      android:singleLine="false"
+      android:text="@string/app_name"
+      android:layout_alignParentEnd="true"
+      android:background="@mipmap/portrait" />
+</RelativeLayout>

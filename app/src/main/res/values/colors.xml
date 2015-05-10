@@ -1,0 +1,11 @@
+<resources>
+
+    <color name="black_overlay">#c5000000</color>
+    <color name="button_normal">#ff2a55ff</color>
+    <color name="button_pressed">#ff1e09ff</color>
+
+    <color name="black">#000000</color>
+    <color name="message_text">#0000DD</color>
+
+    <color name="add_time_background">#ff066958</color>
+</resources>

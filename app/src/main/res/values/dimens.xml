@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="normal_margin">16dp</dimen>
+    <dimen name="button_radius">8dp</dimen>
+    <dimen name="message_padding">8dp</dimen>
+    <dimen name="portrait_padding">8dp</dimen>
+
+    <dimen name="message_margin_start">10dp</dimen>
+</resources>

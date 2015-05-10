@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">Bluetooth4Chat</string>
+
+    <string name="send">Send</string>
+    <string name="message">Message</string>
+    <string name="ble_chat">BlueTooth</string>
+
+    <string name="setting">Setting</string>
+    <string name="scan">Scan</string>
+    <string name="share">Share</string>
+
+    <string name="menu_scan">Scan</string>
+    <string name="menu_stop">Stop</string>
+    <string name="unknown_device">Unknown device</string>
+
+</resources>
