@@ -13,6 +13,7 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.support.annotation.NonNull;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -136,7 +137,7 @@ public class BLEChatActivity extends Activity implements View.OnClickListener{
         messageAdapter.notifyDataSetChanged();
     }
 
-    private void writeData(byte[] data){
+    private void writeData(@NonNull byte[] data){
         data = new byte[]{(byte) 0xAE,(byte) 0xAA,(byte)0x01,(byte)0x50,(byte)0x58,(byte)0x56};
         if(isConnect && writes.size() != 0){
             for(BluetoothGattCharacteristic characteristic : writes){
